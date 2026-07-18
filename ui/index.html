@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Agent Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--bg-tertiary);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        select, textarea, input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        select:focus, textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+        }
+        
+        .task-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .task-item:hover {
+            border-color: var(--accent);
+        }
+        
+        .task-item.selected {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .task-description {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+        
+        .task-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .status-pending { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .status-queued { background: var(--warning); color: black; }
+        .status-running { background: var(--accent); color: white; }
+        .status-completed { background: var(--success); color: white; }
+        .status-failed { background: var(--error); color: white; }
+        
+        .task-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .event-log {
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+        
+        .event-item {
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .event-thought {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .event-tool-call {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid var(--success);
+        }
+        
+        .event-tool-result {
+            background: rgba(148, 163, 184, 0.1);
+            border-left: 3px solid var(--text-secondary);
+        }
+        
+        .event-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--error);
+        }
+        
+        .event-time {
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+        
+        .event-content {
+            color: var(--text-primary);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric-card {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Cloud Agent Platform</h1>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>System Online</span>
+            </div>
+        </header>
+        
+        <div class="main-grid">
+            <div class="left-panel">
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Submit New Task</h2>
+                    </div>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="agentType">Agent Type</label>
+                            <select id="agentType">
+                                <option value="default">Default Assistant</option>
+                                <option value="coder">Code Assistant</option>
+                                <option value="reviewer">Code Reviewer</option>
+                                <option value="researcher">Research Assistant</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDescription">Task Description</label>
+                            <textarea id="taskDescription" placeholder="Describe the task you want the agent to perform...">Read the current directory and list all files, then create a summary file called README.md with the findings.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">Priority</label>
+                            <select id="priority">
+                                <option value="1">Low</option>
+                                <option value="5" selected>Normal</option>
+                                <option value="10">High</option>
+                                <option value="20">Critical</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span>🚀</span> Submit Task
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Task Execution Log</h2>
+                        <button class="btn btn-secondary" onclick="clearLog()">Clear</button>
+                    </div>
+                    <div class="event-log" id="eventLog">
+                        <div class="empty-state">
+                            Events will appear here when a task is running...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="card" style="margin-bottom: 2rem;">
+                    <h2 class="card-title" style="margin-bottom: 1rem;">Platform Metrics</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalTasks">0</div>
+                            <div class="metric-label">Total Tasks</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="runningTasks">0</div>
+                            <div class="metric-label">Running</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="completedTasks">0</div>
+                            <div class="metric-label">Completed</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="failedTasks">0</div>
+                            <div class="metric-label">Failed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Tasks</h2>
+                        <button class="btn btn-secondary" onclick="loadTasks()">↻</button>
+                    </div>
+                    <div class="task-list" id="taskList">
+                        <div class="empty-state">
+                            No tasks yet. Submit a task to get started!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentTaskId = null;
+        let ws = null;
+        let eventSource = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+            loadMetrics();
+            
+            // Refresh tasks and metrics periodically
+            setInterval(loadTasks, 5000);
+            setInterval(loadMetrics, 10000);
+        });
+        
+        // Form submission
+        document.getElementById('taskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+            
+            const task = {
+                description: document.getElementById('taskDescription').value,
+                agent_type: document.getElementById('agentType').value,
+                priority: parseInt(document.getElementById('priority').value),
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(task),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit task');
+                }
+                
+                const data = await response.json();
+                currentTaskId = data.id;
+                
+                // Clear and start event log
+                document.getElementById('eventLog').innerHTML = '';
+                connectWebSocket(data.id);
+                
+                // Reset form
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>🚀</span> Submit Task';
+                
+                // Reload tasks
+                loadTasks();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to submit task: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>🚀</span> Submit Task';
+            }
+        });
+        
+        // WebSocket connection for real-time events
+        function connectWebSocket(taskId) {
+            if (ws) {
+                ws.close();
+            }
+            
+            ws = new WebSocket(`ws://localhost:8000/ws/v1/tasks/${taskId}`);
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                addEventLog(data);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+            };
+        }
+        
+        // Add event to log
+        function addEventLog(event) {
+            const log = document.getElementById('eventLog');
+            
+            // Remove empty state if present
+            const emptyState = log.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const time = new Date(event.timestamp).toLocaleTimeString();
+            let content = '';
+            let className = '';
+            
+            switch (event.event_type) {
+                case 'thought':
+                    content = `<strong>🤔 Thinking:</strong> ${escapeHtml(event.data.thought || '')}`;
+                    className = 'event-thought';
+                    break;
+                case 'tool_call':
+                    content = `<strong>🔧 Tool:</strong> ${escapeHtml(event.data.tool_name)}`;
+                    className = 'event-tool-call';
+                    break;
+                case 'tool_result':
+                    const success = event.data.success ? '✅' : '❌';
+                    const result = event.data.result || event.data.error || '';
+                    content = `<strong>${success} Result:</strong> ${escapeHtml(String(result).substring(0, 200))}`;
+                    className = 'event-tool-result';
+                    break;
+                case 'error':
+                    content = `<strong>⚠️ Error:</strong> ${escapeHtml(event.data.error || '')}`;
+                    className = 'event-error';
+                    break;
+                case 'task_started':
+                    content = `<strong>🚀 Task started</strong>`;
+                    className = 'event-tool-call';
+                    break;
+                case 'task_completed':
+                    content = `<strong>✅ Task completed!</strong>`;
+                    className = 'event-tool-result';
+                    break;
+                case 'task_failed':
+                    content = `<strong>❌ Task failed:</strong> ${escapeHtml(event.data.error || '')}`;
+                    className = 'event-error';
+                    break;
+                default:
+                    content = `<strong>${event.event_type}:</strong> ${escapeHtml(JSON.stringify(event.data))}`;
+            }
+            
+            const eventEl = document.createElement('div');
+            eventEl.className = `event-item ${className}`;
+            eventEl.innerHTML = `<span class="event-time">${time}</span><span class="event-content">${content}</span>`;
+            
+            log.insertBefore(eventEl, log.firstChild);
+        }
+        
+        // Load tasks
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/tasks?limit=50`);
+                if (!response.ok) return;
+                
+                const tasks = await response.json();
+                const taskList = document.getElementById('taskList');
+                
+                if (tasks.length === 0) {
+                    taskList.innerHTML = '<div class="empty-state">No tasks yet. Submit a task to get started!</div>';
+                    return;
+                }
+                
+                taskList.innerHTML = tasks.map(task => `
+                    <div class="task-item ${currentTaskId === task.id ? 'selected' : ''}" 
+                         onclick="selectTask('${task.id}')">
+                        <div class="task-header">
+                            <span class="task-description">${escapeHtml(task.description.substring(0, 50))}...</span>
+                            <span class="task-status status-${task.status}">${task.status}</span>
+                        </div>
+                        <div class="task-time">${new Date(task.created_at).toLocaleString()}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+        
+        // Select task
+        function selectTask(taskId) {
+            currentTaskId = taskId;
+            
+            // Update UI
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.task-item').classList.add('selected');
+            
+            // Clear and connect
+            document.getElementById('eventLog').innerHTML = '<div class="empty-state">Loading events...</div>';
+            connectWebSocket(taskId);
+            
+            // Load task details
+            loadTaskDetails(taskId);
+        }
+        
+        // Load task details
+        async function loadTaskDetails(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/tasks/${taskId}`);
+                if (!response.ok) return;
+                
+                const task = await response.json();
+                
+                if (task.result) {
+                    addEventLog({
+                        event_type: 'task_completed',
+                        timestamp: task.completed_at,
+                        data: { result: task.result }
+                    });
+                }
+                
+                if (task.error) {
+                    addEventLog({
+                        event_type: 'task_failed',
+                        timestamp: task.completed_at,
+                        data: { error: task.error }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading task details:', error);
+            }
+        }
+        
+        // Load metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/metrics`);
+                if (!response.ok) return;
+                
+                const metrics = await response.json();
+                
+                document.getElementById('totalTasks').textContent = metrics.total_tasks || 0;
+                document.getElementById('runningTasks').textContent = 
+                    metrics.status_counts?.running || 0;
+                document.getElementById('completedTasks').textContent = 
+                    metrics.status_counts?.completed || 0;
+                document.getElementById('failedTasks').textContent = 
+                    metrics.status_counts?.failed || 0;
+                
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+        
+        // Clear event log
+        function clearLog() {
+            document.getElementById('eventLog').innerHTML = 
+                '<div class="empty-state">Events will appear here when a task is running...</div>';
+        }
+        
+        // Utility: escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
